@@ -10,31 +10,34 @@
 }
 
 /* CORREÇÃO DO BURACO (LACUNA): Pinta o fundo base da página */
+/* --- CORREÇÃO DE ZOOM E SCROLL HORIZONTAL --- */
+html, body {
+    width: 100%;
+    max-width: 100vw; /* Garante que não passe da largura da tela */
+    overflow-x: hidden; /* Corta qualquer coisa que tente vazar para os lados */
+    margin: 0;
+    padding: 0;
+}
+
 html {
-    background-color: #020617; /* Mesma cor do final do gradiente */
     height: 100%;
+    background-color: #020617;
 }
 
 body {
-    /* CORREÇÃO: 'fixed' impede que o gradiente suba e crie buracos ao rolar */
     background: radial-gradient(circle at top, #1e293b, #020617);
-    background-attachment: fixed; 
-    
+    background-attachment: fixed;
     color: var(--text);
     font-family: 'Poppins', sans-serif;
-    margin: 0;
     min-height: 100vh;
     
-    /* Layout Flex para centralizar e organizar em coluna */
+    /* Layout */
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* Começa do topo, não do centro, para respeitar a margem das luzes */
     justify-content: flex-start; 
-    
-    overflow-x: hidden;
     position: relative;
-    padding-bottom: 20px; /* Espaço extra no final da página */
+    padding-bottom: 20px;
 }
 
 /* --- Neve --- */

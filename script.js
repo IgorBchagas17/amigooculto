@@ -135,7 +135,7 @@ async function iniciarSorteio() {
 
         // 5. ANIMAÇÃO (CSS Transform)
         // A altura de cada item é 150px. Queremos parar no último.
-        const itemHeight = 150;
+        const itemHeight = 120;
         const totalHeight = (listaAnimacao.length - 1) * itemHeight; // -1 para parar no ultimo
         
         // Reseta posição

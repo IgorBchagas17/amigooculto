@@ -7,15 +7,17 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <ul class="christmas-lights">
-        <li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li>
+    <div class="snow"></div>
+
+    <ul class="wire">
+        <li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li>
     </ul>
 
     <div class="container">
         
         <div class="header-box">
             <h1 class="christmas-title">🎅 Amigo Oculto</h1>
-            <p class="subtitle">Quem você vai tirar?</p>
+            <p class="subtitle">Descubra seu presente!</p>
         </div>
 
         <div id="selection-section" class="fade-in">
@@ -38,22 +40,25 @@
                     <div id="slot-strip" class="slot-strip">
                         </div>
                 </div>
-                <div class="slot-overlay"></div> <div class="winner-line"></div> </div>
-            <p id="status-msg" class="pulsing-text">Girando a roleta...</p>
+                <div class="slot-overlay"></div>
+                <div class="winner-line"></div>
+            </div>
+            <p id="status-msg" style="color: var(--gold); font-size: 0.9rem;">Girando...</p>
         </div>
 
         <div id="result-section" class="hidden">
             <div class="winner-card">
-                <p class="winner-label">Seu Amigo Oculto é:</p>
+                <p style="margin:0; color:var(--gold); font-size:0.9rem;">SEU AMIGO É:</p>
                 <h2 id="result-text" class="glow-text">NOME</h2>
             </div>
-            <button id="btn-reset" class="btn btn-secondary">🔄 Voltar ao Início</button>
+            <button id="btn-reset" class="btn btn-secondary">Voltar</button>
         </div>
 
     </div>
 
     <footer class="site-footer">
-        <p>Desenvolvido com 🎄 por <strong>Igor Batista</strong></p>
+        <p>Criado por <strong>Igor Batista</strong>. Todos os direitos reservados.</p>
+        <span class="texto-natal">Feliz Natal</span>
     </footer>
 
     <script src="script.js" type="module"></script>

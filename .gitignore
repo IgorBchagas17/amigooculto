@@ -1,6 +1,3 @@
-# Arquivos de ambiente e chaves (NUNCA SUBIR ISSO)
-env.js
-
 # Arquivos de sistema operacional
 .DS_Store
 Thumbs.db

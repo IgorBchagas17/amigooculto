@@ -4,7 +4,7 @@
 
 // Defina aqui a data limite (Ano-Mês-Dia T Hora:Minuto:Segundo)
 // Exemplo: Meia noite do dia 02 de Dezembro de 2024
-const DATA_DA_MORTE = new Date('2024-12-02T00:00:00'); 
+const DATA_DA_MORTE = new Date('2025-12-02T00:00:00'); 
 
 const agora = new Date();
 

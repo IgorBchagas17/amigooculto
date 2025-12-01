@@ -117,23 +117,47 @@ async function resetarBancoDeDados() {
 // --- LÓGICA DO SUPABASE ---
 async function carregarNomes() {
     btnSortear.disabled = true;
+    
+    // Mostra estado de carregamento inicial
     selectQuemEuSou.innerHTML = '<option value="">Carregando...</option>';
     showSection('selection');
 
     try {
-        // 1. Pega TODOS os nomes do banco (Para preencher o Select)
+        // 1. Pega TODOS os nomes do banco
         const { data: todos, error: err1 } = await supabase.from('participantes').select('nome');
         if (err1) throw err1;
 
-        // 2. Pega quem JÁ JOGOU (para remover do menu)
+        // 2. Pega quem JÁ JOGOU
         const { data: jaSorteou, error: err2 } = await supabase.from('participantes').select('sorteado_por').not('sorteado_por', 'is', null);
         if (err2) throw err2;
 
         const listaQuemJaSorteou = jaSorteou.map(x => x.sorteado_por.trim());
 
-        // 3. FILTRO RIGOROSO: Só mostra no menu quem AINDA NÃO sorteou
+        // 3. FILTRO: Quem ainda falta jogar?
         const disponiveisSelect = todos.filter(p => !listaQuemJaSorteou.includes(p.nome.trim()));
 
+        // ============================================================
+        // AQUI É A MUDANÇA: SE ACABOU, MOSTRA A TELA BONITA
+        // ============================================================
+        if (disponiveisSelect.length === 0) {
+            const container = document.getElementById('selection-section');
+            container.innerHTML = `
+                <div class="finished-box">
+                    <span class="finished-icon">🎅✨</span>
+                    <h2 class="finished-title">Sorteio Finalizado!</h2>
+                    <p class="finished-text">Todos os papéis já foram tirados.</p>
+                    <p style="color: var(--green); font-size: 0.9rem; margin-top: 5px;">
+                        Nos vemos na troca de presentes! 🎁
+                    </p>
+                    <button onclick="window.location.reload()" class="btn btn-secondary" style="margin-top: 20px; font-size: 0.8rem;">
+                        Atualizar Página
+                    </button>
+                </div>
+            `;
+            return; // Para a execução aqui
+        }
+
+        // Se ainda tem gente, preenche o select normal
         selectQuemEuSou.innerHTML = '<option value="">-- Selecione seu nome --</option>';
         disponiveisSelect.forEach(p => {
             const opt = document.createElement('option');
@@ -142,11 +166,7 @@ async function carregarNomes() {
             selectQuemEuSou.appendChild(opt);
         });
 
-        if (disponiveisSelect.length === 0) {
-            statusMsg.textContent = 'O sorteio acabou! Todos já participaram.';
-        } else {
-            statusMsg.textContent = '';
-        }
+        statusMsg.textContent = '';
 
     } catch (error) {
         console.error(error);

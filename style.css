@@ -207,3 +207,35 @@ select {
     color: transparent;
     letter-spacing: 1px;
 }
+/* --- ESTILO DE SORTEIO FINALIZADO --- */
+.finished-box {
+    text-align: center;
+    padding: 20px 0;
+    animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.finished-icon {
+    font-size: 4rem;
+    margin-bottom: 15px;
+    display: block;
+    filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.4));
+    animation: bounce 2s infinite;
+}
+
+.finished-title {
+    font-family: 'Mountains of Christmas', cursive;
+    color: var(--gold);
+    font-size: 2rem;
+    margin: 0;
+}
+
+.finished-text {
+    color: #cbd5e1;
+    margin-top: 10px;
+    font-size: 1rem;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}

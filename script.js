@@ -4,10 +4,10 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './env.js';
 // --- CONFIGURAÇÃO ---
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Sons (Certifique-se de ter spin.mp3 e win.mp3 na pasta, ou o navegador dará erro 404 no console, mas o site funcionará)
+// Sons
 const audioSpin = new Audio('./sounds/spin.mp3');
 const audioWin = new Audio('./sounds/win.mp3');
-audioSpin.loop = true; // Loop enquanto gira
+audioSpin.loop = true; 
 
 // DOM Elements
 const selectionSection = document.getElementById('selection-section');
@@ -22,7 +22,7 @@ const resultText = document.getElementById('result-text');
 const btnReset = document.getElementById('btn-reset');
 
 // --- VARIÁVEIS DE ESTADO ---
-let nomesDisponiveis = [];
+let todosOsNomesVisual = []; // LISTA COMPLETA (Só para a animação ficar bonita)
 let meuNomeGlobal = '';
 let nomeSorteadoGlobal = '';
 let idSorteadoGlobal = '';
@@ -36,6 +36,47 @@ function showSection(sectionName) {
     if (sectionName === 'result') resultSection.classList.remove('hidden');
 }
 
+// --- FUNÇÃO DE EMERGÊNCIA (RESETAR TUDO) ---
+async function resetarBancoDeDados() {
+    if (!confirm("Tem certeza que deseja REINICIAR o sorteio? Isso vai apagar tudo!")) {
+        return;
+    }
+
+    const btn = document.getElementById('btn-reset');
+    const textoOriginal = btn.textContent;
+    btn.textContent = "Limpando...";
+    btn.disabled = true;
+    
+    try {
+        const { data: lista, error: errSelect } = await supabase.from('participantes').select('id');
+        if (errSelect) throw errSelect;
+
+        if (lista.length === 0) {
+            alert("A lista já está vazia!");
+            window.location.reload();
+            return;
+        }
+
+        const idsParaLimpar = lista.map(item => item.id);
+
+        const { error: errUpdate } = await supabase
+            .from('participantes')
+            .update({ sorteado_por: null })
+            .in('id', idsParaLimpar);
+
+        if (errUpdate) throw errUpdate;
+
+        alert("Sorteio reiniciado com sucesso!");
+        window.location.reload();
+
+    } catch (error) {
+        console.error("Erro ao resetar:", error);
+        alert("Erro ao reiniciar: " + error.message);
+        btn.textContent = textoOriginal;
+        btn.disabled = false;
+    }
+}
+
 // --- LÓGICA DO SUPABASE ---
 async function carregarNomes() {
     btnSortear.disabled = true;
@@ -43,17 +84,21 @@ async function carregarNomes() {
     showSection('selection');
 
     try {
-        // 1. Pega todos os nomes
+        // 1. Pega TODOS os nomes do banco
         const { data: todos, error: err1 } = await supabase.from('participantes').select('nome');
         if (err1) throw err1;
 
-        // 2. Pega quem já sorteou
+        // --- SALVA PARA A ANIMAÇÃO ---
+        // Aqui guardamos todo mundo, inclusive quem já saiu, para a roleta ficar cheia
+        todosOsNomesVisual = todos.map(p => p.nome.trim());
+
+        // 2. Pega quem JÁ JOGOU (para remover do menu)
         const { data: jaSorteou, error: err2 } = await supabase.from('participantes').select('sorteado_por').not('sorteado_por', 'is', null);
         if (err2) throw err2;
 
         const listaQuemJaSorteou = jaSorteou.map(x => x.sorteado_por.trim());
 
-        // 3. Filtra: só mostra no select quem AINDA NÃO sorteou
+        // 3. FILTRO RIGOROSO: Só mostra no menu quem AINDA NÃO sorteou
         const disponiveisSelect = todos.filter(p => !listaQuemJaSorteou.includes(p.nome.trim()));
 
         selectQuemEuSou.innerHTML = '<option value="">-- Selecione seu nome --</option>';
@@ -65,7 +110,9 @@ async function carregarNomes() {
         });
 
         if (disponiveisSelect.length === 0) {
-            alert('O sorteio acabou! Todos já participaram.');
+            statusMsg.textContent = 'O sorteio acabou! Todos já participaram.';
+        } else {
+            statusMsg.textContent = '';
         }
 
     } catch (error) {
@@ -84,11 +131,14 @@ async function iniciarSorteio() {
     showSection('roulette');
     statusMsg.textContent = "Sorteando...";
     
-    // Tentar tocar som (alguns navegadores bloqueiam se não houver interação prévia)
     try { audioSpin.play(); } catch(e) {}
 
     try {
-        // 1. Busca quem pode ser sorteado (quem ainda não foi tirado)
+        // ======================================================
+        // PARTE 1: MATEMÁTICA (Segurança)
+        // ======================================================
+        
+        // Busca APENAS quem ainda não foi sorteado (sorteado_por = NULL)
         const { data: disponiveis, error } = await supabase
             .from('participantes')
             .select('nome, id')
@@ -96,35 +146,53 @@ async function iniciarSorteio() {
         
         if (error) throw error;
 
-        // 2. Filtra eu mesmo
-        const candidatos = disponiveis.filter(p => p.nome.trim() !== meuNomeGlobal);
+        // Remove eu mesmo da lista matemática (não posso me tirar)
+        const candidatosReais = disponiveis.filter(p => p.nome.trim() !== meuNomeGlobal);
 
-        if (candidatos.length === 0) {
+        // Se não sobrou ninguém (Travamento/Deadlock)
+        if (candidatosReais.length === 0) {
             audioSpin.pause();
-            alert('Erro: Só sobrou você. O sorteio travou.');
-            window.location.reload();
+            resultText.textContent = "OPS! Travou...";
+            resultText.style.fontSize = "1.5rem";
+            statusMsg.innerHTML = "Só sobrou você! A matemática não ajudou.<br>O sorteio precisa ser reiniciado.";
+            showSection('result');
+            
+            btnReset.textContent = "⚠️ REINICIAR SORTEIO PARA TODOS";
+            btnReset.style.background = "#ef4444";
+            btnReset.style.color = "white";
+            btnReset.onclick = resetarBancoDeDados;
             return;
         }
 
-        // 3. Define o vencedor agora
-        const indiceVencedor = Math.floor(Math.random() * candidatos.length);
-        const vencedorObj = candidatos[indiceVencedor];
+        // Escolhe o vencedor REAL aqui
+        const indiceVencedor = Math.floor(Math.random() * candidatosReais.length);
+        const vencedorObj = candidatosReais[indiceVencedor];
         nomeSorteadoGlobal = vencedorObj.nome.trim();
         idSorteadoGlobal = vencedorObj.id;
 
-        // 4. Monta a fita da Slot Machine
-        // Criamos uma lista longa com nomes aleatórios e colocamos o vencedor no final
+
+        // ======================================================
+        // PARTE 2: VISUAL (Animação da Roleta)
+        // ======================================================
+        
         let listaAnimacao = [];
         
-        // Adiciona 30 nomes aleatórios para passar rápido
-        for(let i=0; i<30; i++) {
-            const random = candidatos[Math.floor(Math.random() * candidatos.length)].nome;
-            listaAnimacao.push(random);
+        // Aqui usamos a lista 'todosOsNomesVisual' que contém TODO MUNDO.
+        // Isso garante que a roleta mostre vários nomes, criando suspense.
+        
+        // Filtramos apenas o meu próprio nome (pra não aparecer eu mesmo girando)
+        const nomesParaGirar = todosOsNomesVisual.filter(n => n !== meuNomeGlobal);
+
+        // Gera 40 itens aleatórios para a fita
+        for(let i=0; i<40; i++) {
+            const nomeAleatorio = nomesParaGirar[Math.floor(Math.random() * nomesParaGirar.length)];
+            listaAnimacao.push(nomeAleatorio);
         }
-        // Adiciona o vencedor no final
+        
+        // OBRIGATÓRIO: O último nome TEM que ser o vencedor real
         listaAnimacao.push(nomeSorteadoGlobal);
 
-        // Renderiza no HTML
+        // Renderiza a roleta no HTML
         slotStrip.innerHTML = '';
         listaAnimacao.forEach(nome => {
             const div = document.createElement('div');
@@ -133,23 +201,23 @@ async function iniciarSorteio() {
             slotStrip.appendChild(div);
         });
 
-        // 5. ANIMAÇÃO (CSS Transform)
-        // A altura de cada item é 150px. Queremos parar no último.
-        const itemHeight = 120;
-        const totalHeight = (listaAnimacao.length - 1) * itemHeight; // -1 para parar no ultimo
+        // ======================================================
+        // PARTE 3: EXECUTA A ANIMAÇÃO
+        // ======================================================
+        
+        const itemHeight = 120; // Altura definida no CSS
+        const totalHeight = (listaAnimacao.length - 1) * itemHeight; 
         
         // Reseta posição
         slotStrip.style.transition = 'none';
         slotStrip.style.transform = 'translateY(0px)';
+        slotStrip.offsetHeight; // force reflow
 
-        // Força reflow
-        slotStrip.offsetHeight;
-
-        // Inicia o giro
-        slotStrip.style.transition = 'transform 4s cubic-bezier(0.1, 0.7, 0.1, 1)'; // Começa rápido, para devagar
+        // Gira por 5 segundos
+        slotStrip.style.transition = 'transform 5s cubic-bezier(0.1, 0.7, 0.1, 1)'; 
         slotStrip.style.transform = `translateY(-${totalHeight}px)`;
 
-        // 6. QUANDO PARAR (4 segundos depois)
+        // Quando parar (5s depois)
         setTimeout(async () => {
             audioSpin.pause();
             audioSpin.currentTime = 0;
@@ -158,14 +226,18 @@ async function iniciarSorteio() {
             await salvarNoBanco();
             showSection('result');
             
-            // Efeito visual no texto
             resultText.textContent = nomeSorteadoGlobal;
+            resultText.style.fontSize = "2.2rem";
             
-        }, 4000);
+            btnReset.textContent = "🔄 Voltar ao Início";
+            btnReset.style.background = "rgba(255,255,255,0.1)";
+            btnReset.onclick = () => window.location.reload();
+            
+        }, 5000);
 
     } catch (error) {
         console.error(error);
-        alert('Erro no sorteio.');
+        alert('Erro no sorteio. Tente recarregar a página.');
         window.location.reload();
     }
 }
@@ -192,7 +264,6 @@ selectQuemEuSou.addEventListener('change', (e) => {
 btnSortear.addEventListener('click', iniciarSorteio);
 
 btnReset.addEventListener('click', () => {
-    // Apenas recarrega para garantir estado limpo
     window.location.reload();
 });
 

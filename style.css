@@ -1,0 +1,241 @@
+@import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Poppins:wght@400;600&display=swap');
+
+:root {
+    --bg-dark: #0f172a;
+    --card-bg: #1e293b;
+    --gold: #fbbf24;
+    --red: #ef4444;
+    --green: #22c55e;
+    --text: #f1f5f9;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text);
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+}
+
+/* --- Luzes de Natal (Pisca-Pisca) --- */
+.christmas-lights {
+    position: absolute;
+    top: -15px;
+    width: 100%;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    padding: 0;
+    z-index: 1;
+    margin: 0;
+    pointer-events: none;
+}
+
+.christmas-lights li {
+    position: relative;
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin: 0 15px;
+    background: #fff;
+    list-style: none;
+    animation-name: flash;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+}
+
+.christmas-lights li:nth-child(2n+1) { background: var(--red); box-shadow: 0 5px 20px 2px var(--red); animation-delay: 0.4s; }
+.christmas-lights li:nth-child(2n+2) { background: var(--green); box-shadow: 0 5px 20px 2px var(--green); animation-delay: 1s; }
+.christmas-lights li:nth-child(3n+3) { background: var(--gold); box-shadow: 0 5px 20px 2px var(--gold); animation-delay: 1.5s; }
+
+@keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* --- Container Principal --- */
+.container {
+    background-color: var(--card-bg);
+    margin-top: 60px; /* Espaço para as luzes */
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    border: 1px solid #334155;
+    position: relative;
+    z-index: 10;
+}
+
+.christmas-title {
+    font-family: 'Mountains of Christmas', cursive;
+    color: var(--gold);
+    font-size: 2.8rem;
+    margin: 0;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.subtitle {
+    color: #94a3b8;
+    margin-top: 5px;
+}
+
+/* --- Formulário e Select --- */
+.form-group {
+    margin: 30px 0;
+    text-align: left;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--gold);
+}
+
+select {
+    width: 100%;
+    padding: 15px;
+    background: #334155;
+    color: white;
+    border: 2px solid #475569;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    outline: none;
+}
+
+/* --- Botões Intuitivos --- */
+.btn {
+    width: 100%;
+    padding: 18px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-big-action {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    box-shadow: 0 4px 0 #15803d; /* Efeito 3D */
+}
+
+.btn-big-action:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+.btn-big-action:disabled {
+    background: #475569;
+    box-shadow: none;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 2px solid var(--text);
+    color: var(--text);
+    margin-top: 20px;
+}
+
+/* --- Slot Machine (Roleta Vertical) --- */
+.slot-machine-frame {
+    height: 150px;
+    background: #000;
+    border: 4px solid var(--gold);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    margin: 20px 0;
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+}
+
+.slot-window {
+    height: 100%;
+    overflow: hidden; /* Esconde o que sai da área */
+}
+
+.slot-strip {
+    display: flex;
+    flex-direction: column;
+    /* A transição será controlada via JS */
+}
+
+.slot-item {
+    height: 150px; /* Mesma altura do frame */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+}
+
+/* Efeito de vidro/sombra interna */
+.slot-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 20%, rgba(0,0,0,0) 80%, rgba(0,0,0,0.8) 100%);
+    pointer-events: none;
+}
+
+/* Linha vermelha de vitória */
+.winner-line {
+    position: absolute;
+    top: 50%;
+    left: -10px;
+    right: -10px;
+    height: 4px;
+    background: rgba(239, 68, 68, 0.7);
+    transform: translateY(-50%);
+    z-index: 5;
+    box-shadow: 0 0 10px var(--red);
+}
+
+/* --- Resultado e Brilho --- */
+.winner-card {
+    background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+    padding: 30px;
+    border-radius: 15px;
+    border: 2px solid var(--gold);
+    animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 0 50px rgba(220, 38, 38, 0.5);
+}
+
+.winner-label {
+    font-size: 1rem;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin: 0;
+}
+
+.glow-text {
+    font-size: 2.5rem;
+    margin: 10px 0 0 0;
+    color: #fff;
+    text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 40px var(--gold);
+}
+
+.pulsing-text {
+    animation: pulse 1s infinite;
+    color: var(--gold);
+}
+
+/* Utilitários */
+.hidden { display: none; }
+@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
+.site-footer { margin-top: auto; padding: 20px; font-size: 0.8rem; color: #64748b; }

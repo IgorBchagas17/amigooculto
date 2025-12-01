@@ -1,0 +1,10 @@
+# Arquivos de ambiente e chaves (NUNCA SUBIR ISSO)
+env.js
+
+# Arquivos de sistema operacional
+.DS_Store
+Thumbs.db
+
+# Logs e pastas de dependências (caso use npm no futuro)
+node_modules/
+npm-debug.log

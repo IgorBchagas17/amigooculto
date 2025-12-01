@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteio de Natal 🎄</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <ul class="christmas-lights">
+        <li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li>
+    </ul>
+
+    <div class="container">
+        
+        <div class="header-box">
+            <h1 class="christmas-title">🎅 Amigo Oculto</h1>
+            <p class="subtitle">Quem você vai tirar?</p>
+        </div>
+
+        <div id="selection-section" class="fade-in">
+            <div class="form-group">
+                <label for="quem-eu-sou">Quem é você?</label>
+                <div class="select-wrapper">
+                    <select id="quem-eu-sou">
+                        <option value="">Carregando nomes...</option>
+                    </select>
+                </div>
+            </div>
+            <button id="btn-sortear" class="btn btn-big-action" disabled>
+                🎁 SORTEAR AGORA
+            </button>
+        </div>
+
+        <div id="roulette-section" class="hidden">
+            <div class="slot-machine-frame">
+                <div class="slot-window">
+                    <div id="slot-strip" class="slot-strip">
+                        </div>
+                </div>
+                <div class="slot-overlay"></div> <div class="winner-line"></div> </div>
+            <p id="status-msg" class="pulsing-text">Girando a roleta...</p>
+        </div>
+
+        <div id="result-section" class="hidden">
+            <div class="winner-card">
+                <p class="winner-label">Seu Amigo Oculto é:</p>
+                <h2 id="result-text" class="glow-text">NOME</h2>
+            </div>
+            <button id="btn-reset" class="btn btn-secondary">🔄 Voltar ao Início</button>
+        </div>
+
+    </div>
+
+    <footer class="site-footer">
+        <p>Desenvolvido com 🎄 por <strong>Igor Batista</strong></p>
+    </footer>
+
+    <script src="script.js" type="module"></script>
+</body>
+</html>

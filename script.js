@@ -1,8 +1,46 @@
+// ======================================================
+// 💣 CONFIGURAÇÃO DE AUTO-DESTRUIÇÃO
+// ======================================================
+
+// Defina aqui a data limite (Ano-Mês-Dia T Hora:Minuto:Segundo)
+// Exemplo: Meia noite do dia 02 de Dezembro de 2024
+const DATA_DA_MORTE = new Date('2024-12-02T00:00:00'); 
+
+const agora = new Date();
+
+if (agora > DATA_DA_MORTE) {
+    // Se passou da hora, apaga o site inteiro visualmente
+    document.body.innerHTML = `
+        <style>
+            body { background: #000; color: #ff0000; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; text-align: center; }
+            h1 { font-size: 3rem; margin-bottom: 20px; }
+            p { font-size: 1.2rem; color: #666; }
+        </style>
+        <h1>🚫 SITE ENCERRADO</h1>
+        <p>O prazo para o Amigo Oculto expirou.</p>
+        <p>Este site se autodestruiu.</p>
+    `;
+    
+    // Mata a execução do resto do Javascript
+    throw new Error("Site expirado. Execução interrompida.");
+}
+
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './env.js';
 
 // --- CONFIGURAÇÃO ---
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ====================================================================
+// ✏️ EDITE AQUI: LISTA VISUAL FIXA (Para a animação da roleta)
+// ====================================================================
+const NOMES_DA_ROLETA = [
+    "Arroz", 
+    "Mary Mary", 
+    "Marília", 
+    "Nica", 
+    "Iury"
+];
 
 // Sons
 const audioSpin = new Audio('./sounds/spin.mp3');
@@ -22,7 +60,6 @@ const resultText = document.getElementById('result-text');
 const btnReset = document.getElementById('btn-reset');
 
 // --- VARIÁVEIS DE ESTADO ---
-let todosOsNomesVisual = []; // LISTA COMPLETA (Só para a animação ficar bonita)
 let meuNomeGlobal = '';
 let nomeSorteadoGlobal = '';
 let idSorteadoGlobal = '';
@@ -84,13 +121,9 @@ async function carregarNomes() {
     showSection('selection');
 
     try {
-        // 1. Pega TODOS os nomes do banco
+        // 1. Pega TODOS os nomes do banco (Para preencher o Select)
         const { data: todos, error: err1 } = await supabase.from('participantes').select('nome');
         if (err1) throw err1;
-
-        // --- SALVA PARA A ANIMAÇÃO ---
-        // Aqui guardamos todo mundo, inclusive quem já saiu, para a roleta ficar cheia
-        todosOsNomesVisual = todos.map(p => p.nome.trim());
 
         // 2. Pega quem JÁ JOGOU (para remover do menu)
         const { data: jaSorteou, error: err2 } = await supabase.from('participantes').select('sorteado_por').not('sorteado_por', 'is', null);
@@ -135,10 +168,9 @@ async function iniciarSorteio() {
 
     try {
         // ======================================================
-        // PARTE 1: MATEMÁTICA (Segurança)
+        // PARTE 1: MATEMÁTICA (Segurança via Supabase)
         // ======================================================
         
-        // Busca APENAS quem ainda não foi sorteado (sorteado_por = NULL)
         const { data: disponiveis, error } = await supabase
             .from('participantes')
             .select('nome, id')
@@ -146,10 +178,10 @@ async function iniciarSorteio() {
         
         if (error) throw error;
 
-        // Remove eu mesmo da lista matemática (não posso me tirar)
+        // Remove eu mesmo da lista matemática
         const candidatosReais = disponiveis.filter(p => p.nome.trim() !== meuNomeGlobal);
 
-        // Se não sobrou ninguém (Travamento/Deadlock)
+        // Travamento/Deadlock
         if (candidatosReais.length === 0) {
             audioSpin.pause();
             resultText.textContent = "OPS! Travou...";
@@ -164,7 +196,7 @@ async function iniciarSorteio() {
             return;
         }
 
-        // Escolhe o vencedor REAL aqui
+        // Escolhe o vencedor REAL
         const indiceVencedor = Math.floor(Math.random() * candidatosReais.length);
         const vencedorObj = candidatosReais[indiceVencedor];
         nomeSorteadoGlobal = vencedorObj.nome.trim();
@@ -172,24 +204,23 @@ async function iniciarSorteio() {
 
 
         // ======================================================
-        // PARTE 2: VISUAL (Animação da Roleta)
+        // PARTE 2: VISUAL (Animação Limpa e Rápida)
         // ======================================================
         
         let listaAnimacao = [];
         
-        // Aqui usamos a lista 'todosOsNomesVisual' que contém TODO MUNDO.
-        // Isso garante que a roleta mostre vários nomes, criando suspense.
-        
-        // Filtramos apenas o meu próprio nome (pra não aparecer eu mesmo girando)
-        const nomesParaGirar = todosOsNomesVisual.filter(n => n !== meuNomeGlobal);
+        // 1. Filtra meu nome da lista fixa visual (pra eu não me ver girando)
+        const listaLimpa = NOMES_DA_ROLETA.filter(n => n !== meuNomeGlobal);
 
-        // Gera 40 itens aleatórios para a fita
-        for(let i=0; i<40; i++) {
-            const nomeAleatorio = nomesParaGirar[Math.floor(Math.random() * nomesParaGirar.length)];
-            listaAnimacao.push(nomeAleatorio);
+        // 2. Efeito Carrossel: Repete a lista inteira 5 vezes
+        // Isso faz girar rápido e mostra todos os nomes em sequência
+        const voltas = 5; 
+        for(let i=0; i < voltas; i++) {
+            // Espalha a lista limpa dentro da lista de animação
+            listaAnimacao.push(...listaLimpa);
         }
         
-        // OBRIGATÓRIO: O último nome TEM que ser o vencedor real
+        // 3. O GRANDE FINAL: O vencedor TEM que ser o último item
         listaAnimacao.push(nomeSorteadoGlobal);
 
         // Renderiza a roleta no HTML
@@ -205,19 +236,18 @@ async function iniciarSorteio() {
         // PARTE 3: EXECUTA A ANIMAÇÃO
         // ======================================================
         
-        const itemHeight = 120; // Altura definida no CSS
+        const itemHeight = 120; 
         const totalHeight = (listaAnimacao.length - 1) * itemHeight; 
         
-        // Reseta posição
         slotStrip.style.transition = 'none';
         slotStrip.style.transform = 'translateY(0px)';
         slotStrip.offsetHeight; // force reflow
 
-        // Gira por 5 segundos
-        slotStrip.style.transition = 'transform 5s cubic-bezier(0.1, 0.7, 0.1, 1)'; 
+        // Gira por 4 segundos (Rápido porque a lista é longa)
+        slotStrip.style.transition = 'transform 4s cubic-bezier(0.1, 0.7, 0.1, 1)'; 
         slotStrip.style.transform = `translateY(-${totalHeight}px)`;
 
-        // Quando parar (5s depois)
+        // Quando parar
         setTimeout(async () => {
             audioSpin.pause();
             audioSpin.currentTime = 0;
@@ -233,7 +263,7 @@ async function iniciarSorteio() {
             btnReset.style.background = "rgba(255,255,255,0.1)";
             btnReset.onclick = () => window.location.reload();
             
-        }, 5000);
+        }, 4000);
 
     } catch (error) {
         console.error(error);
